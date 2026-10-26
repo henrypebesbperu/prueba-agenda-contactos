@@ -15,6 +15,11 @@
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid var(--borde); padding: .5rem; text-align: left; }
     th { background: var(--fondo-tabla); }
+    #buscar { width: 100%; margin-bottom: 1rem; }
+    #aviso { min-height: 1.5rem; margin: 0 0 .5rem; color: #C00000; }
+    .btn-baja { background: #C00000; padding: .25rem .5rem; }
+    .tabla-envoltura { overflow-x: auto; }
+    .vacio { text-align: center; color: #666; }
     @media (max-width: 600px) { form { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -27,15 +32,18 @@
     <input id="telefono" placeholder="Teléfono (9 dígitos)" required pattern="9[0-9]{8}">
     <button type="submit">Agregar</button>
   </form>
+  <p id="aviso" role="alert" aria-live="polite"></p>
 
-  <!-- PENDIENTE 1: campo de búsqueda que filtre por nombre o correo mientras se escribe -->
+  <input id="buscar" type="search" placeholder="Buscar por nombre o correo" aria-label="Buscar por nombre o correo">
 
+  <div class="tabla-envoltura">
   <table>
     <thead>
-      <tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><!-- PENDIENTE 2: columna Acciones --></tr>
+      <tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Acciones</th></tr>
     </thead>
     <tbody id="lista"></tbody>
   </table>
+  </div>
   <p id="contador"></p>
 
   <script>
@@ -55,22 +63,59 @@
 
     const contactos = cargar();
     const lista = document.getElementById('lista');
+    const buscar = document.getElementById('buscar');
+    const aviso = document.getElementById('aviso');
 
     function render() {
       lista.innerHTML = '';
       const activos = contactos.filter(c => c.estado === 'ACTIVO');
-      for (const c of activos) {
+      const texto = buscar.value.trim().toLowerCase();
+      const visibles = texto
+        ? activos.filter(c => c.nombre.toLowerCase().includes(texto) || c.correo.toLowerCase().includes(texto))
+        : activos;
+      for (const c of visibles) {
         const fila = document.createElement('tr');
         for (const valor of [c.nombre, c.correo, c.telefono]) {
           const celda = document.createElement('td');
           celda.textContent = valor; // evita inyección de HTML
           fila.appendChild(celda);
         }
-        // PENDIENTE 2: botón «Dar de baja» con confirmación → estado = 'INACTIVO' y fechaBaja (baja lógica, no borrar)
+        const acciones = document.createElement('td');
+        const boton = document.createElement('button');
+        boton.type = 'button';
+        boton.className = 'btn-baja';
+        boton.textContent = 'Dar de baja';
+        boton.addEventListener('click', () => darDeBaja(c.id));
+        acciones.appendChild(boton);
+        fila.appendChild(acciones);
         lista.appendChild(fila);
       }
-      document.getElementById('contador').textContent = activos.length + ' contacto(s) activo(s)';
+      if (visibles.length === 0) {
+        const fila = document.createElement('tr');
+        const celda = document.createElement('td');
+        celda.colSpan = 4;
+        celda.className = 'vacio';
+        celda.textContent = texto ? 'Ningún contacto coincide con la búsqueda' : 'No hay contactos activos';
+        fila.appendChild(celda);
+        lista.appendChild(fila);
+      }
+      document.getElementById('contador').textContent = activos.length + ' contacto(s) activo(s)'
+        + (texto ? ' · ' + visibles.length + ' coinciden con la búsqueda' : '');
     }
+
+    // Baja lógica: se marca INACTIVO con fecha de baja; nunca se borra del arreglo
+    function darDeBaja(id) {
+      const c = contactos.find(x => x.id === id && x.estado === 'ACTIVO');
+      if (!c) return;
+      if (!confirm('¿Dar de baja a ' + c.nombre + ' (' + c.correo + ')?')) return;
+      c.estado = 'INACTIVO';
+      c.fechaBaja = new Date().toISOString();
+      guardar();
+      aviso.textContent = '';
+      render();
+    }
+
+    buscar.addEventListener('input', render);
 
     document.getElementById('form-contacto').addEventListener('submit', (e) => {
       e.preventDefault();
@@ -78,7 +123,12 @@
       const correo = document.getElementById('correo').value.trim().toLowerCase();
       const telefono = document.getElementById('telefono').value.trim();
       if (!nombre || !correo || !/^9\d{8}$/.test(telefono)) return;
-      // PENDIENTE 3: impedir correos duplicados entre contactos activos y avisar al usuario
+      if (contactos.some(c => c.estado === 'ACTIVO' && c.correo.toLowerCase() === correo)) {
+        aviso.textContent = 'Ya existe un contacto activo con el correo ' + correo + '.';
+        document.getElementById('correo').focus();
+        return;
+      }
+      aviso.textContent = '';
       contactos.push({ id: Date.now(), nombre, correo, telefono, estado: 'ACTIVO', fechaBaja: null });
       guardar();
       e.target.reset();
