@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agenda de contactos · SoftBrilliance</title>
+  <style>
+    :root { --primario: #1F3864; --acento: #2E75B6; --fondo-tabla: #D9E2F3; --borde: #8EAADB; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; max-width: 48rem; margin: 2rem auto; padding: 0 1rem; color: var(--primario); }
+    h1 { border-bottom: 2px solid var(--acento); padding-bottom: .5rem; }
+    form { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: .5rem; margin: 1rem 0; }
+    input, button { padding: .5rem; font: inherit; border: 1px solid var(--borde); border-radius: 4px; }
+    button { background: var(--acento); color: #fff; border: none; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid var(--borde); padding: .5rem; text-align: left; }
+    th { background: var(--fondo-tabla); }
+    @media (max-width: 600px) { form { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <h1>Agenda de contactos</h1>
+
+  <form id="form-contacto">
+    <input id="nombre" placeholder="Nombre" required maxlength="60">
+    <input id="correo" type="email" placeholder="Correo" required maxlength="80">
+    <input id="telefono" placeholder="Teléfono (9 dígitos)" required pattern="9[0-9]{8}">
+    <button type="submit">Agregar</button>
+  </form>
+
+  <!-- PENDIENTE 1: campo de búsqueda que filtre por nombre o correo mientras se escribe -->
+
+  <table>
+    <thead>
+      <tr><th>Nombre</th><th>Correo</th><th>Teléfono</th><!-- PENDIENTE 2: columna Acciones --></tr>
+    </thead>
+    <tbody id="lista"></tbody>
+  </table>
+  <p id="contador"></p>
+
+  <script>
+    const CLAVE = 'agenda-contactos.v1';
+
+    function cargar() {
+      try {
+        const datos = JSON.parse(localStorage.getItem(CLAVE) || '[]');
+        return Array.isArray(datos) ? datos : [];
+      } catch {
+        return []; // datos dañados: se arranca con la lista vacía
+      }
+    }
+    function guardar() {
+      try { localStorage.setItem(CLAVE, JSON.stringify(contactos)); } catch { /* sin almacenamiento: se trabaja en memoria */ }
+    }
+
+    const contactos = cargar();
+    const lista = document.getElementById('lista');
+
+    function render() {
+      lista.innerHTML = '';
+      const activos = contactos.filter(c => c.estado === 'ACTIVO');
+      for (const c of activos) {
+        const fila = document.createElement('tr');
+        for (const valor of [c.nombre, c.correo, c.telefono]) {
+          const celda = document.createElement('td');
+          celda.textContent = valor; // evita inyección de HTML
+          fila.appendChild(celda);
+        }
+        // PENDIENTE 2: botón «Dar de baja» con confirmación → estado = 'INACTIVO' y fechaBaja (baja lógica, no borrar)
+        lista.appendChild(fila);
+      }
+      document.getElementById('contador').textContent = activos.length + ' contacto(s) activo(s)';
+    }
+
+    document.getElementById('form-contacto').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const nombre = document.getElementById('nombre').value.trim();
+      const correo = document.getElementById('correo').value.trim().toLowerCase();
+      const telefono = document.getElementById('telefono').value.trim();
+      if (!nombre || !correo || !/^9\d{8}$/.test(telefono)) return;
+      // PENDIENTE 3: impedir correos duplicados entre contactos activos y avisar al usuario
+      contactos.push({ id: Date.now(), nombre, correo, telefono, estado: 'ACTIVO', fechaBaja: null });
+      guardar();
+      e.target.reset();
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
