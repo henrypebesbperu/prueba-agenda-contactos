@@ -1,7 +1,7 @@
 # Proyecto: prueba-agenda-contactos
 
 ## Perfil
-- Rol: desarrollo · Tipo: FrontEnd + Base de datos · Estado: pendientes 1–4 completados; falta push y pull request (requiere confirmación y credenciales)
+- Rol: desarrollo · Tipo: FrontEnd + Base de datos · Estado: terminado (PR #1 fusionado en `main` el 2026-10-26)
 - Stack: HTML + CSS + JavaScript puro (un archivo) · PostgreSQL 16 para el modelo de datos
 - Objetivo: completar los pendientes de `BITACORA.md` y publicar el proyecto en local
 - Terminado: los pendientes funcionan y están verificados, el script SQL está escrito y revisado (sin ejecutar), el repositorio está clonado en local, `INDICE.md` está actualizado y los cambios están en una rama con su pull request
@@ -23,6 +23,7 @@
 - Sin dependencias externas.
 
 ## Repositorio y publicación local
-- Repositorio: GitHub `henrypebesbperu/prueba-agenda-contactos` (público desde 2026-10-26), rama principal `main`.
+- Repositorio: GitHub `henrypebesbperu/prueba-agenda-contactos` (se hizo público el 2026-10-26 para clonarlo), rama principal `main`.
 - Local: clonar en la ruta estándar del Agente Base (`<Documentos>\Agente base\proyectos\prueba-agenda-contactos\`).
 - Flujo: rama `feature/<tema>` → commits pequeños (Conventional Commits, en español) → push y pull request hacia `main` **con confirmación**. Nunca push directo a `main` ni `--force`.
+- Para que el agente pueda hacer push, crear la tarea con este repositorio como fuente de GitHub.
