@@ -18,6 +18,11 @@
     #buscar { width: 100%; margin-bottom: 1rem; }
     #aviso { min-height: 1.5rem; margin: 0 0 .5rem; color: #C00000; }
     .btn-baja { background: #C00000; padding: .25rem .5rem; }
+    .btn-editar { padding: .25rem .5rem; margin-right: .25rem; }
+    .btn-secundario { background: #fff; color: var(--primario); border: 1px solid var(--borde); }
+    .botones-form { display: flex; gap: .5rem; }
+    .botones-form button { flex: 1; }
+    tr.editando td { background: #FFF2CC; }
     .tabla-envoltura { overflow-x: auto; }
     .vacio { text-align: center; color: #666; }
     @media (max-width: 600px) { form { grid-template-columns: 1fr; } }
@@ -30,7 +35,10 @@
     <input id="nombre" placeholder="Nombre" required maxlength="60">
     <input id="correo" type="email" placeholder="Correo" required maxlength="80">
     <input id="telefono" placeholder="Teléfono (9 dígitos)" required pattern="9[0-9]{8}">
-    <button type="submit">Agregar</button>
+    <div class="botones-form">
+      <button type="submit" id="btn-guardar">Agregar</button>
+      <button type="button" id="btn-cancelar" class="btn-secundario" hidden>Cancelar</button>
+    </div>
   </form>
   <p id="aviso" role="alert" aria-live="polite"></p>
 
@@ -65,6 +73,37 @@
     const lista = document.getElementById('lista');
     const buscar = document.getElementById('buscar');
     const aviso = document.getElementById('aviso');
+    const form = document.getElementById('form-contacto');
+    const btnGuardar = document.getElementById('btn-guardar');
+    const btnCancelar = document.getElementById('btn-cancelar');
+    let idEditando = null; // id del contacto en edición; null = modo alta
+
+    // Correo ocupado por otro contacto activo (se excluye el que se está editando)
+    function correoOcupado(correo, excluirId) {
+      return contactos.some(c => c.estado === 'ACTIVO' && c.id !== excluirId && c.correo.toLowerCase() === correo);
+    }
+
+    function iniciarEdicion(id) {
+      const c = contactos.find(x => x.id === id && x.estado === 'ACTIVO');
+      if (!c) return;
+      idEditando = id;
+      document.getElementById('nombre').value = c.nombre;
+      document.getElementById('correo').value = c.correo;
+      document.getElementById('telefono').value = c.telefono;
+      btnGuardar.textContent = 'Guardar cambios';
+      btnCancelar.hidden = false;
+      aviso.textContent = '';
+      render();
+      document.getElementById('nombre').focus();
+    }
+
+    function terminarEdicion() {
+      idEditando = null;
+      form.reset();
+      btnGuardar.textContent = 'Agregar';
+      btnCancelar.hidden = true;
+      render();
+    }
 
     function render() {
       lista.innerHTML = '';
@@ -81,6 +120,13 @@
           fila.appendChild(celda);
         }
         const acciones = document.createElement('td');
+        if (c.id === idEditando) fila.className = 'editando';
+        const editar = document.createElement('button');
+        editar.type = 'button';
+        editar.className = 'btn-editar';
+        editar.textContent = 'Editar';
+        editar.addEventListener('click', () => iniciarEdicion(c.id));
+        acciones.appendChild(editar);
         const boton = document.createElement('button');
         boton.type = 'button';
         boton.className = 'btn-baja';
@@ -112,23 +158,36 @@
       c.fechaBaja = new Date().toISOString();
       guardar();
       aviso.textContent = '';
-      render();
+      if (idEditando === id) terminarEdicion(); else render();
     }
 
     buscar.addEventListener('input', render);
 
-    document.getElementById('form-contacto').addEventListener('submit', (e) => {
+    btnCancelar.addEventListener('click', () => { aviso.textContent = ''; terminarEdicion(); });
+
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
       const nombre = document.getElementById('nombre').value.trim();
       const correo = document.getElementById('correo').value.trim().toLowerCase();
       const telefono = document.getElementById('telefono').value.trim();
       if (!nombre || !correo || !/^9\d{8}$/.test(telefono)) return;
-      if (contactos.some(c => c.estado === 'ACTIVO' && c.correo.toLowerCase() === correo)) {
+      if (correoOcupado(correo, idEditando)) {
         aviso.textContent = 'Ya existe un contacto activo con el correo ' + correo + '.';
         document.getElementById('correo').focus();
         return;
       }
       aviso.textContent = '';
+      if (idEditando !== null) {
+        const c = contactos.find(x => x.id === idEditando && x.estado === 'ACTIVO');
+        if (c) {
+          Object.assign(c, { nombre, correo, telefono, fechaModificacion: new Date().toISOString() });
+          guardar();
+        } else {
+          aviso.textContent = 'El contacto que estabas editando ya no existe o fue dado de baja; no se guardaron los cambios.';
+        }
+        terminarEdicion();
+        return;
+      }
       contactos.push({ id: Date.now(), nombre, correo, telefono, estado: 'ACTIVO', fechaBaja: null });
       guardar();
       e.target.reset();
