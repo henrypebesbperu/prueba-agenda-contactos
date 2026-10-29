@@ -1,7 +1,7 @@
 # Proyecto: prueba-agenda-contactos
 
 ## Perfil
-- Rol: desarrollo · Tipo: FrontEnd + Base de datos · Estado: terminado (PR #1 fusionado en `main` el 2026-10-26)
+- Rol: desarrollo · Tipo: FrontEnd + Base de datos · Estado: en evolución (PR #1 fusionado el 2026-10-26; edición de contactos en `feature/editar-contactos` el 2026-10-27)
 - Stack: HTML + CSS + JavaScript puro (un archivo) · PostgreSQL 16 para el modelo de datos
 - Objetivo: completar los pendientes de `BITACORA.md` y publicar el proyecto en local
 - Terminado: los pendientes funcionan y están verificados, el script SQL está escrito y revisado (sin ejecutar), el repositorio está clonado en local, `INDICE.md` está actualizado y los cambios están en una rama con su pull request
@@ -9,13 +9,15 @@
 - Responsable: Henry Pebe · SoftBrillianceGroup
 
 ## Mapa del proyecto
-- `index.html`: formulario (nombre, correo, teléfono peruano de 9 dígitos), aviso, búsqueda en vivo (nombre o correo, sin distinguir mayúsculas), tabla con botón «Dar de baja» (con confirmación) y contador.
+- `index.html`: formulario (nombre, correo, teléfono peruano de 9 dígitos), aviso, búsqueda en vivo (nombre o correo, sin distinguir mayúsculas), tabla con botones «Editar» y «Dar de baja» (con confirmación) y contador.
+- Edición: «Editar» carga el contacto en el mismo formulario («Guardar cambios» / «Cancelar»), resalta la fila y guarda `fechaModificacion`; valida igual que el alta y el correo único entre activos excluye al propio contacto.
 - Los contactos se guardan en `localStorage` (clave `agenda-contactos.v1`); si los datos están dañados, se arranca con la lista vacía.
 - Cada contacto tiene `estado` (`ACTIVO`/`INACTIVO`) y `fechaBaja`; la tabla muestra solo los activos.
 - No se puede agregar un correo que ya tenga otro contacto activo (comparación en minúsculas); el correo de un contacto dado de baja sí puede reutilizarse.
 - `_agente/sql/001_crear_tabla_contactos.sql`: tabla `contacto` (PostgreSQL) con estado, auditoría e índice único de correo entre activos.
 - `_agente/sql/002_baja_contacto.sql`: baja lógica parametrizada (`$1` id, `$2` usuario) con `COUNT` previo, transacción, `RETURNING` y reversión.
-- `_agente/pruebas/e2e.js`: 15 pruebas E2E con Playwright (`node _agente/pruebas/e2e.js`).
+- `_agente/sql/003_editar_contacto.sql`: edición parametrizada (`$1` id, `$2` nombre, `$3` correo, `$4` teléfono) con respaldo previo, verificación de correo, transacción y `RETURNING`.
+- `_agente/pruebas/e2e.js`: 23 pruebas E2E con Playwright (`node _agente/pruebas/e2e.js`).
 
 ## Convenciones
 - Interfaz en español. Colores del estándar: #1F3864, #2E75B6, #D9E2F3, #8EAADB.
