@@ -17,7 +17,7 @@
 - `_agente/sql/001_crear_tabla_contactos.sql`: tabla `contacto` (PostgreSQL) con estado, auditoría e índice único de correo entre activos.
 - `_agente/sql/002_baja_contacto.sql`: baja lógica parametrizada (`$1` id, `$2` usuario) con `COUNT` previo, transacción, `RETURNING` y reversión.
 - `_agente/sql/003_editar_contacto.sql`: edición parametrizada (`$1` id, `$2` nombre, `$3` correo, `$4` teléfono) con respaldo previo, verificación de correo, transacción y `RETURNING`.
-- `_agente/pruebas/e2e.js`: 23 pruebas E2E con Playwright (`node _agente/pruebas/e2e.js`).
+- `_agente/pruebas/e2e.js`: 24 pruebas E2E con Playwright (`node _agente/pruebas/e2e.js`).
 
 ## Convenciones
 - Interfaz en español. Colores del estándar: #1F3864, #2E75B6, #D9E2F3, #8EAADB.

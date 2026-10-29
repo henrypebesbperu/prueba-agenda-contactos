@@ -179,8 +179,12 @@
       aviso.textContent = '';
       if (idEditando !== null) {
         const c = contactos.find(x => x.id === idEditando && x.estado === 'ACTIVO');
-        if (c) Object.assign(c, { nombre, correo, telefono, fechaModificacion: new Date().toISOString() });
-        guardar();
+        if (c) {
+          Object.assign(c, { nombre, correo, telefono, fechaModificacion: new Date().toISOString() });
+          guardar();
+        } else {
+          aviso.textContent = 'El contacto que estabas editando ya no existe o fue dado de baja; no se guardaron los cambios.';
+        }
         terminarEdicion();
         return;
       }
